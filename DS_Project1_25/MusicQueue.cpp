@@ -2,7 +2,8 @@
 
 
 MusicQueue::MusicQueue() {
-
+    this->head = nullptr;
+    this->rear = nullptr;
 }
 
 MusicQueue::~MusicQueue() {
