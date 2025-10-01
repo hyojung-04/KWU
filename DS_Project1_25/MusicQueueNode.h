@@ -19,13 +19,10 @@ public:
 	MusicQueueNode() {}
 	~MusicQueueNode() {}
 
-	void insert(string str) {
-		int idx1, idx2;
-		idx1=str.find('|');
-		idx2=str.find('|',idx1+1);
-		artist=str.substr(0,idx1);
-		title=str.substr(idx1+1, idx2-idx1-1);
-		run_time=str.substr(idx2,str.size()-idx2);
+	void insert(string art, string tit, string rt) {
+		artist=art;
+		title=tit;
+		run_time=rt;
 	}
 
 	bool exist() {
