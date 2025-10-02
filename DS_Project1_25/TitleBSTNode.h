@@ -1,13 +1,14 @@
 #pragma once
 #include "TitleBST.h"
 #include "MusicQueueNode.h"
+#include <vector>
 
 class TitleBSTNode {
 private:
-	string title;
-	vector<string> artist;
-	string run_time;
-	vector<int> rt;
+	std::string title;
+	std::vector<std::string> artist;
+	std::string run_time;
+	std::vector<int> rt;
 	int count;
 	TitleBSTNode* left;
 	TitleBSTNode* right;

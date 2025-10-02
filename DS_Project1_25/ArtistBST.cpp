@@ -2,14 +2,23 @@
 
 
 ArtistBST::ArtistBST() {
-
+    this->root=nullptr;
+    this->parent=nullptr;
+    this->data="";
+    this->target;
 }
 ArtistBST::~ArtistBST() {
 
 }
 
-void ArtistBST::insert() {
+void ArtistBST::insert(MusicQueueNode* queNode) {
+    if(this->root==nullptr){
+        ArtistBSTNode* treeNode=new ArtistBSTNode;
+        root=treeNode;
+    }
+    else{
 
+    }
 }
 
 void ArtistBST::search() {

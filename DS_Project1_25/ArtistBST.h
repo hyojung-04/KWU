@@ -5,7 +5,7 @@ class ArtistBST {
 private:
 	ArtistBSTNode* root;
 	ArtistBSTNode* parent;
-	string data;
+	std::string data;
 	ArtistBSTNode* target;
 
 
@@ -13,7 +13,7 @@ public:
 	ArtistBST();
 	~ArtistBST();
 
-	void insert();
+	void insert(MusicQueueNode* queNode);
 	void search();
 	void print();
 	void delete_node();

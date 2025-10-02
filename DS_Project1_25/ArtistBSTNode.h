@@ -5,10 +5,10 @@
 
 class ArtistBSTNode {
 private:
-	string artist;
-	vector<string> title;
-	string run_time;
-	vector<int> rt; 
+	std::string artist;
+	std::vector<std::string> title;
+	std::string run_time;
+	std::vector<int> rt; 
 	int count; 
 	ArtistBSTNode* left;
 	ArtistBSTNode* right;

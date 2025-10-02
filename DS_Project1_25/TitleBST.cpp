@@ -2,8 +2,12 @@
 
 
 TitleBST::TitleBST()  {
-
+    root=nullptr;
+    parent=nullptr;
+    data="";
+    target=nullptr;
 }
+
 TitleBST::~TitleBST() {
 
 }

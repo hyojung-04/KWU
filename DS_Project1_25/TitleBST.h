@@ -5,7 +5,7 @@ class TitleBST {
 private:
 	TitleBSTNode* root;
 	TitleBSTNode* parent;
-	string data;
+	std::string data;
 	TitleBSTNode* target;
 
 public:
