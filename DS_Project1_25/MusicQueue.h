@@ -1,5 +1,6 @@
 #pragma once
 #include "MusicQueueNode.h"
+#include <string>
 
 class MusicQueue {
 private:
@@ -11,8 +12,8 @@ public:
 	~MusicQueue();
 
 	bool empty();
-	bool exist();
-	void push(string str);
+	bool exist(std::string line);
+	void push(std::string str);
 	MusicQueueNode* pop();
 	MusicQueueNode* front();
 };
