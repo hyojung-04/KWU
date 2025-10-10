@@ -5,7 +5,6 @@ class ArtistBST {
 private:
 	ArtistBSTNode* root;
 	ArtistBSTNode* parent;
-	std::string data;
 	ArtistBSTNode* target;
 
 

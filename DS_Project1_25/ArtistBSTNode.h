@@ -1,5 +1,4 @@
 #pragma once
-#include "ArtistBST.h"
 #include "MusicQueueNode.h"
 #include <vector>
 
@@ -77,5 +76,7 @@ public:
 	void setRtList(const std::vector<int>& r) { 
 		this->rt = r; 
 	}
-
+	void setCount(int c) { 
+		this->count = c; 
+	}
 };
