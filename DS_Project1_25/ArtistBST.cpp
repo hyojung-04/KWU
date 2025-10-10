@@ -1,5 +1,6 @@
 #include "ArtistBST.h"
 #include "MusicQueueNode.h"
+#include "ArtistBSTNode.h"
 #include <iostream>
 using namespace std;
 

@@ -39,44 +39,18 @@ public:
     }
 
 	//getter function
-	std::string getArtist(){
-		return this->artist;
-	}
-	std::vector<std::string> getTitleList() const { 
-		return title; 
-	}
-    int getCount() const { 
-		return count; 
-	}
-    ArtistBSTNode* getLeft() const { 
-		return left; 
-	}
-    ArtistBSTNode* getRight() const { 
-		return right; 
-	}
-	std::vector<int> getRtList() const {
-		 return rt; 
-	}
-
-
+	std::string getArtist(){ return this->artist; }
+	std::vector<std::string> getTitleList() const { return title; }
+    int getCount() const { return count; }
+    ArtistBSTNode* getLeft() const { return left; }
+    ArtistBSTNode* getRight() const { return right; }
+	std::vector<int> getRtList() const {return rt; }
 
 	//setter function
-	void setArtist(std::string name){
-		this->artist=name;
-	}
-	void setLeft(ArtistBSTNode* node) { 
-		this->left = node; 
-	}
-    void setRight(ArtistBSTNode* node) { 
-		this->right = node; 
-	}
-	void setTitleList(const std::vector<std::string>& t) {
-		 this->title = t; 
-	}
-	void setRtList(const std::vector<int>& r) { 
-		this->rt = r; 
-	}
-	void setCount(int c) { 
-		this->count = c; 
-	}
+	void setArtist(std::string name){ this->artist=name; }
+	void setLeft(ArtistBSTNode* node) { this->left = node; }
+    void setRight(ArtistBSTNode* node) { this->right = node; }
+	void setTitleList(const std::vector<std::string>& t) { this->title = t; }
+	void setRtList(const std::vector<int>& r) { this->rt = r; }
+	void setCount(int c) { this->count = c; }
 };
