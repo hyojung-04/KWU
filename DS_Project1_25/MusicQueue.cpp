@@ -6,6 +6,7 @@ MusicQueue::MusicQueue()
 {
     this->head = nullptr;
     this->rear = nullptr;
+    this->size=0;
 }
 
 MusicQueue::~MusicQueue()
@@ -21,10 +22,7 @@ MusicQueue::~MusicQueue()
 
 bool MusicQueue::empty()
 {
-    if (this->size < 1)
-        return true;
-    else
-        return false;
+    return this->head==nullptr;
 }
 
 bool MusicQueue::exist(string line)
@@ -55,7 +53,7 @@ void MusicQueue::push(string line)
     idx2 = line.find('|', idx1 + 1);
     artist = line.substr(0, idx1);
     title = line.substr(idx1 + 1, idx2 - idx1 - 1);
-    run_time = line.substr(idx2, line.size() - idx2);
+    run_time = line.substr(idx2+1);
 
     MusicQueueNode *tmpNode = new MusicQueueNode;
     tmpNode->insert(artist, title, run_time);
@@ -70,6 +68,7 @@ void MusicQueue::push(string line)
         tmpNode->setPrev(rear);
         this->rear = tmpNode;
     }
+    size++;
 }
 
 MusicQueueNode *MusicQueue::pop()
@@ -82,8 +81,11 @@ MusicQueueNode *MusicQueue::pop()
     }
     MusicQueueNode *tmpNode = this->head; // return을 위한 pop할 head 노드 저장
     this->head = this->head->getNext();   // 뮤직큐의 헤드를 head의 next로 바꾸기
-    if (this->head == nullptr)
-        this->rear = nullptr; // 만약 head==rear여서 head==nullptr이 되면 rear도 바꿔야함
+    if(this->head){
+        this->head->setPrev(nullptr);
+    }else{
+        this->rear=nullptr;
+    }
     size--;
     return tmpNode;
 }
