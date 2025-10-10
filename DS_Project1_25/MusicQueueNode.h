@@ -1,7 +1,7 @@
 #pragma once
-#include "MusicQueue.h"
+//#include "MusicQueue.h"
 #include <string>
-// #include <cstd::string>
+#include <cstring>
 #include <sstream>
 
 // using namespace std;
@@ -46,7 +46,7 @@ public:
 	}
 
 
-	//setter 함수
+	//setter function
 	void setNext(MusicQueueNode* nxt) {
 		this->next = nxt;
 	}
@@ -55,7 +55,7 @@ public:
 		this->prev=prv;
 	}
 
-	//getter 함수
+	//getter function
 	MusicQueueNode* getNext() {
 		if(!this->next){
 			return nullptr;

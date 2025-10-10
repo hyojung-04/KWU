@@ -6,7 +6,6 @@ MusicQueue::MusicQueue()
 {
     this->head = nullptr;
     this->rear = nullptr;
-    this->size=0;
 }
 
 MusicQueue::~MusicQueue()
@@ -79,8 +78,8 @@ MusicQueueNode *MusicQueue::pop()
              << "프로그램 종료" << endl;
         return nullptr;
     }
-    MusicQueueNode *tmpNode = this->head; // return을 위한 pop할 head 노드 저장
-    this->head = this->head->getNext();   // 뮤직큐의 헤드를 head의 next로 바꾸기
+    MusicQueueNode *tmpNode = this->head; // store head for return
+    this->head = this->head->getNext();   // update head to head->next
     if(this->head){
         this->head->setPrev(nullptr);
     }else{
