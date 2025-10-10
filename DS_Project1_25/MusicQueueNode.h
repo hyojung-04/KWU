@@ -17,9 +17,6 @@ private:
 
 public:
 	MusicQueueNode() {
-		artist = "";
-		title = "";
-		run_time = "";
 		next = nullptr;
 		prev = nullptr;
 	}
@@ -77,8 +74,12 @@ public:
 	std::string  getArtist(){
 		return this->artist;
 	}
+
 	std::string  getTitle(){
 		return this->title;
 	}
-
+	
+	std::string getRunTime(){
+		return this->run_time;
+	}
 };

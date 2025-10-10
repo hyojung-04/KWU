@@ -12,10 +12,11 @@ private:
 public:
 	ArtistBST();
 	~ArtistBST();
-
+	void clearTree(ArtistBSTNode* node);
 	void insert(MusicQueueNode* queNode);
-	void search();
+	ArtistBSTNode* search(const std::string& artist);
 	void print();
-	void delete_node();
+	void printInOrder(ArtistBSTNode* node);
+	void delete_node(const std::string& artist);
 
 };
