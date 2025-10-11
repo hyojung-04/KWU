@@ -96,21 +96,3 @@ MusicQueueNode *MusicQueue::front()
     else
         return this->head;
 }
-
-int main()
-{
-    {
-        MusicQueue q; // 여기서 생성자 호출됨
-
-        // 노드 3개 정도 추가해보기
-        q.push("N.Flying|blue moon|3:36");
-        q.push("PSY|gangnam style|3:25");
-        q.push("Maroon 5|sugar|3:55");
-
-        cout << "큐에 노드 3개 삽입 완료" << endl;
-
-    } // 여기서 q 소멸자 자동 호출됨
-
-    cout << "프로그램 끝!" << endl;
-    return 0;
-}

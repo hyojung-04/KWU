@@ -8,13 +8,12 @@ private:
 	std::vector<std::string> title;
 	std::string run_time;
 	std::vector<int> rt; 
-	int count; 
+	int count=0; 
 	ArtistBSTNode* left;
 	ArtistBSTNode* right;
 
 public:
 	ArtistBSTNode() {
-		count=0;
 		this->left=nullptr;
 		this->right=nullptr;
 	}

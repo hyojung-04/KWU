@@ -16,4 +16,7 @@ public:
 	void push(std::string str);
 	MusicQueueNode* pop();
 	MusicQueueNode* front();
+
+	// getter
+	MusicQueueNode* getHead() { return this->head; }
 };
