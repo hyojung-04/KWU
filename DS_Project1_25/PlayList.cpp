@@ -129,6 +129,13 @@ void PlayList::delete_node(const string& line) {
         }
         cur = cur->getNext();
     }
+
+    if (this->empty()) {
+    this->head = nullptr;
+    this->cursor = nullptr;
+    return;
+}
+
 }
 
 bool PlayList::exist(const string& line) {
@@ -159,7 +166,9 @@ bool PlayList::full() {
 }
 
 string PlayList::print() {
-    if (this->empty()) return "";
+    if (this->empty()) {
+    return "========ERROR========\n600\n=====================\n";
+}
 
     stringstream ss;
     PlayListNode* cur = this->head;
