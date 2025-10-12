@@ -5,7 +5,7 @@ using namespace std;
 int main()
 {
 	Manager manager;
-	manager.run("command_test[debug].txt"); 
+	manager.run("command.txt"); 
 
 	return 0;
 }

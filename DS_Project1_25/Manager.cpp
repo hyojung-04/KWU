@@ -14,7 +14,7 @@ static const char *TAIL = "====================\n";
 Manager::Manager()
 {
     // open log in append mode
-    this->flog.open("log_test[debug].txt", ios::app);
+    this->flog.open("log.txt", ios::app);
 }
 
 Manager::~Manager()
