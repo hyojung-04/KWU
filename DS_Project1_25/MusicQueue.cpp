@@ -41,8 +41,6 @@ void MusicQueue::push(string line)
 {
     if (this->size == 100)
     {
-        std::cout << "큐 꽉" << endl
-                  << "프로그램 종료" << endl;
         return;
     }
     // extract elements from line
@@ -74,8 +72,6 @@ MusicQueueNode *MusicQueue::pop()
 {
     if (!this->head)
     {
-        cout << "큐 텅" << endl
-             << "프로그램 종료" << endl;
         return nullptr;
     }
     MusicQueueNode *tmpNode = this->head; // store head for return
