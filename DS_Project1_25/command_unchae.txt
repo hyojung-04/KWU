@@ -1,0 +1,32 @@
+LOAD
+ADD
+ADD | |
+ADD A|B
+NOPE something
+ADD Taylor Swift|Love Story|03:55
+ADD Taylor Swift|Love Story|03:55
+ADD Coldplay|Yellow|04:29
+ADD Coldplay|Fix You|04:55
+ADD NewJeans|Ditto|03:06
+ADD BTS|dynamite|03:20
+ADD IU|Palette|03:37
+SEARCH TITLE Love Story
+SEARCH TITLE Yellow
+SEARCH ARTIST Coldplay
+SEARCH ARTIST Taylor Swift
+DELETE SONG Love Story|Taylor Swift
+DELETE TITLE Yellow
+PRINT TITLE
+PRINT ARTIST
+PRINT QUEUE
+PRINT LIST
+QPOP
+QPOP
+QPOP
+QPOP
+QPOP
+QPOP
+QPOP
+SAVE
+LOAD
+EXIT

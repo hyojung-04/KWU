@@ -1,8 +1,10 @@
 #include "Manager.h"
 #include <string>
 #include <cstring>
+#include <sstream>
 #include <fstream>
 #include <iostream>
+#include <functional>
 #include "MusicQueue.h"
 
 using namespace std;
@@ -34,56 +36,45 @@ Manager::~Manager()
 
 void Manager::run(const char *command)
 {
-    cout << "[DEBUG] trying to open command file: " << command << endl;
+    // reset log at start (once per run)
+    if (this->flog.is_open())
+        this->flog.close();
+    this->flog.open("log.txt");
+    // open command file
     this->fcmd.open(command);
 
+    // if fail to open
     if (!this->fcmd.is_open())
     {
-        cout << "[DEBUG] failed to open command.txt" << endl;
+        cout << "========ERROR========" << endl;
+        cout << "100" << endl;
+        cout << "====================" << endl;
+
+        flog << "========ERROR========" << endl;
+        flog << "100" << endl;
+        flog << "====================" << endl;
         return;
     }
-    cout << "[DEBUG] command.txt open success" << endl;
 
-    // // open command file
-    // this->fcmd.open(command);
-
-    // // if fail to open
-    // if (!this->fcmd.is_open()) {
-    //     cout << "========ERROR========" << endl;
-    //     cout << "100" << endl;
-    //     cout << "=====================" << endl;
-
-    //     flog << "========ERROR========" << endl;
-    //     flog << "100" << endl;
-    //     flog << "=====================" << endl;
-    //     return;
-    // }
-
-    string line;
-    // read each line
-    while (getline(fcmd, line))
+    std::string line;
+    while (std::getline(this->fcmd, line))
     {
-        // skip empty line
         if (line.empty())
             continue;
 
-        // split first word (command)
-        stringstream ss(line);
-        string cmd;
-        ss >> cmd;
+        // split command and rest
+        // ex) "ADD KDA|pop stars|3:23"
+        size_t sp = line.find(' ');
+        string cmd = (sp == std::string::npos) ? line : line.substr(0, sp);
+        string rest = (sp == std::string::npos) ? "" : line.substr(sp + 1);
 
-        // move stream back to start of args
-        if (cmd.empty())
-            continue;
-
-        // check what command is
         if (cmd == "LOAD")
         {
             this->LOAD();
         }
         else if (cmd == "ADD")
         {
-            this->ADD();
+            this->ADD(rest); // pass whole "KDA|pop stars|3:23"
         }
         else if (cmd == "QPOP")
         {
@@ -91,38 +82,31 @@ void Manager::run(const char *command)
         }
         else if (cmd == "SEARCH")
         {
-            this->SEARCH();
+            this->SEARCH(rest); // pass search key/options
         }
         else if (cmd == "MAKEPL")
         {
-            this->MAKEPL();
+            this->MAKEPL(rest); // pass makepl key/options
         }
         else if (cmd == "PRINT")
         {
-            this->PRINT();
+            this->PRINT(rest);
         }
         else if (cmd == "DELETE")
         {
-            this->DELETE();
+            this->DELETE(rest); // pass delete target/options
         }
         else if (cmd == "EXIT")
         {
             this->EXIT();
-            break; // stop program
+            break;
         }
         else
         {
-            // wrong command
-            cout << "========ERROR========" << endl;
-            cout << "100" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "100" << endl;
-            flog << "=====================" << endl;
+            std::cout << "========ERROR========\n1000\n====================\n";
+            this->flog << "========ERROR========\n1000\n====================\n";
         }
     }
-
-    // close command file
     this->fcmd.close();
 }
 
@@ -133,7 +117,7 @@ void Manager::LOAD()
     {
         this->flog << "========ERROR========" << endl;
         this->flog << "100" << endl;
-        this->flog << "=====================" << endl;
+        this->flog << "====================" << endl;
         return;
     }
 
@@ -143,7 +127,7 @@ void Manager::LOAD()
     {
         this->flog << "========ERROR========" << endl;
         this->flog << "100" << endl;
-        this->flog << "=====================" << endl;
+        this->flog << "====================" << endl;
         return;
     }
 
@@ -164,7 +148,7 @@ void Manager::LOAD()
     {
         this->flog << "========ERROR========" << endl;
         this->flog << "100" << endl;
-        this->flog << "=====================" << endl;
+        this->flog << "====================" << endl;
         return;
     }
 
@@ -180,90 +164,67 @@ void Manager::LOAD()
         cur = cur->getNext();
     }
 
-    this->flog << "=====================" << endl;
+    this->flog << "====================" << endl;
 }
 
-void Manager::ADD()
+void Manager::ADD(const std::string &data_in)
 {
-    // read one line from command file
-    string line;
-    getline(fcmd, line);
+    // do not read file here
+    // do not print ADD header before validation
 
-    // make log header
-    flog << "========ADD========" << endl;
-
-    // cut spaces after "ADD"
-    if (line.size() <= 4)
+    // 1) basic check
+    if (data_in.empty())
     {
-        // not enough info
-        flog << "========ERROR========" << endl;
-        flog << "200" << endl;
-        flog << "=====================" << endl;
-        cout << "========ERROR========" << endl;
-        cout << "200" << endl;
-        cout << "=====================" << endl;
+        std::cout << "========ERROR========\n200\n====================\n";
+        this->flog << "========ERROR========\n200\n====================\n";
         return;
     }
 
-    string data = line.substr(4);
+    // 2) trim one leading space if exists (from "ADD <data>")
+    std::string data = data_in;
     if (!data.empty() && data[0] == ' ')
         data = data.substr(1);
 
-    // find '|'
-    size_t idx1 = data.find('|');
-    size_t idx2 = data.find('|', idx1 + 1);
-
-    // if missing '|'
-    if (idx1 == string::npos || idx2 == string::npos)
+    // 3) split by '|'
+    size_t p1 = data.find('|');
+    size_t p2 = (p1 == std::string::npos) ? std::string::npos : data.find('|', p1 + 1);
+    if (p1 == std::string::npos || p2 == std::string::npos)
     {
-        flog << "========ERROR========" << endl;
-        flog << "200" << endl;
-        flog << "=====================" << endl;
-        cout << "========ERROR========" << endl;
-        cout << "200" << endl;
-        cout << "=====================" << endl;
+        std::cout << "========ERROR========\n200\n====================\n";
+        this->flog << "========ERROR========\n200\n====================\n";
         return;
     }
 
-    // split data
-    string artist = data.substr(0, idx1);
-    string title = data.substr(idx1 + 1, idx2 - idx1 - 1);
-    string runtime = data.substr(idx2 + 1);
+    std::string artist = data.substr(0, p1);
+    std::string title = data.substr(p1 + 1, p2 - p1 - 1);
+    std::string runtime = data.substr(p2 + 1);
 
-    // if any empty
     if (artist.empty() || title.empty() || runtime.empty())
     {
-        flog << "========ERROR========" << endl;
-        flog << "200" << endl;
-        flog << "=====================" << endl;
-        cout << "========ERROR========" << endl;
-        cout << "200" << endl;
-        cout << "=====================" << endl;
+        std::cout << "========ERROR========\n200\n====================\n";
+        this->flog << "========ERROR========\n200\n====================\n";
         return;
     }
 
-    // check same song in queue
-    if (this->q.exist(data))
+    // 4) duplicate check (your exist() compares artist+title)
+    if (this->q.exist(artist + "|" + title + "|" + runtime))
     {
-        flog << "========ERROR========" << endl;
-        flog << "200" << endl;
-        flog << "=====================" << endl;
-        cout << "========ERROR========" << endl;
-        cout << "200" << endl;
-        cout << "=====================" << endl;
+        std::cout << "========ERROR========\n200\n====================\n";
+        this->flog << "========ERROR========\n200\n====================\n";
         return;
     }
 
-    // add new song to queue
-    this->q.push(data);
+    // 5) push to queue
+    this->q.push(artist + "|" + title + "|" + runtime);
 
-    // print success
-    flog << artist << "/" << title << "/" << runtime << endl;
-    flog << "=====================" << endl;
+    // 6) success print (both)
+    std::cout << "========ADD========\n"
+              << artist << "/" << title << "/" << runtime << "\n"
+              << "====================\n";
 
-    cout << "========ADD========" << endl;
-    cout << artist << "/" << title << "/" << runtime << endl;
-    cout << "=====================" << endl;
+    this->flog << "========ADD========\n"
+               << artist << "/" << title << "/" << runtime << "\n"
+               << "====================\n";
 }
 
 void Manager::QPOP()
@@ -273,10 +234,10 @@ void Manager::QPOP()
     {
         cout << "========ERROR========" << endl;
         cout << "300" << endl;
-        cout << "=====================" << endl;
+        cout << "====================" << endl;
         flog << "========ERROR========" << endl;
         flog << "300" << endl;
-        flog << "=====================" << endl;
+        flog << "====================" << endl;
         return;
     }
 
@@ -302,940 +263,616 @@ void Manager::QPOP()
     // print success
     cout << "========QPOP========" << endl;
     cout << "Success" << endl;
-    cout << "=====================" << endl;
+    cout << "====================" << endl;
     flog << "========QPOP========" << endl;
     flog << "Success" << endl;
-    flog << "=====================" << endl;
+    flog << "====================" << endl;
 }
 
-void Manager::SEARCH()
+void Manager::SEARCH(const std::string &rest)
 {
-    // read full command line
-    string line;
-    getline(fcmd, line);
-
-    // cut spaces after "SEARCH"
-    if (line.size() <= 6)
+    // 0) basic check
+    if (rest.empty())
     {
-        cout << "========ERROR========" << endl;
-        cout << "400" << endl;
-        cout << "=====================" << endl;
-        flog << "========ERROR========" << endl;
-        flog << "400" << endl;
-        flog << "=====================" << endl;
+        std::cout << "========ERROR========\n400\n====================\n";
+        this->flog << "========ERROR========\n400\n====================\n";
         return;
     }
 
-    string data = line.substr(6);
-    if (!data.empty() && data[0] == ' ')
-        data = data.substr(1);
-
-    // split command parts
-    stringstream ss(data);
-    string option;
-    ss >> option;
-
-    // check if option missing
-    if (option.empty())
+    // 1) split option and arg (keep the whole arg as-is)
+    std::string option, arg;
+    size_t sp = rest.find(' ');
+    option = (sp == std::string::npos) ? rest : rest.substr(0, sp);
+    arg = (sp == std::string::npos) ? "" : rest.substr(sp + 1);
+    if (!arg.empty() && arg[0] == ' ')
+        arg.erase(0, 1);
+    if (option.empty() || arg.empty())
     {
-        cout << "========ERROR========" << endl;
-        cout << "400" << endl;
-        cout << "=====================" << endl;
-        flog << "========ERROR========" << endl;
-        flog << "400" << endl;
-        flog << "=====================" << endl;
+        std::cout << "========ERROR========\n400\n====================\n";
+        this->flog << "========ERROR========\n400\n====================\n";
         return;
     }
 
-    // case 1: ARTIST
+    // 2) ARTIST
     if (option == "ARTIST")
     {
-        string artist;
-        ss >> artist;
-        if (artist.empty())
-        {
-            cout << "========ERROR========" << endl;
-            cout << "400" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "400" << endl;
-            flog << "=====================" << endl;
-            return;
-        }
-
+        std::string artist = arg; // allow spaces
         ArtistBSTNode *found = this->ab.search(artist);
         if (!found)
         {
-            cout << "========ERROR========" << endl;
-            cout << "400" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "400" << endl;
-            flog << "=====================" << endl;
+            std::cout << "========ERROR========\n400\n====================\n";
+            this->flog << "========ERROR========\n400\n====================\n";
             return;
         }
 
-        // print songs of artist
-        cout << "========SEARCH========" << endl;
-        flog << "========SEARCH========" << endl;
+        std::cout << "========SEARCH========\n";
+        this->flog << "========SEARCH========\n";
 
-        vector<string> titles = found->getTitleList();
-        vector<int> rt = found->getRtList();
-
-        for (size_t i = 0; i < titles.size(); i++)
+        std::vector<std::string> titles = found->getTitleList();
+        std::vector<int> rt = found->getRtList();
+        for (size_t i = 0; i < titles.size(); ++i)
         {
-            int min = rt[i] / 60;
-            int sec = rt[i] % 60;
-
-            cout << artist << "/" << titles[i] << "/";
-            flog << artist << "/" << titles[i] << "/";
-
-            if (sec < 10)
-            {
-                cout << min << ":0" << sec << endl;
-                flog << min << ":0" << sec << endl;
-            }
-            else
-            {
-                cout << min << ":" << sec << endl;
-                flog << min << ":" << sec << endl;
-            }
+            int m = rt[i] / 60, s = rt[i] % 60;
+            std::cout << artist << "/" << titles[i] << "/" << m << ":" << (s < 10 ? "0" : "") << s << "\n";
+            this->flog << artist << "/" << titles[i] << "/" << m << ":" << (s < 10 ? "0" : "") << s << "\n";
         }
 
-        cout << "=====================" << endl;
-        flog << "=====================" << endl;
+        std::cout << "====================\n";
+        this->flog << "====================\n";
         return;
     }
 
-    // case 2: TITLE
-    else if (option == "TITLE")
+    // 3) TITLE
+    if (option == "TITLE")
     {
-        string title;
-        ss >> ws;
-        getline(ss, title);
-        if (title.empty())
-        {
-            cout << "========ERROR========" << endl;
-            cout << "400" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "400" << endl;
-            flog << "=====================" << endl;
-            return;
-        }
-
+        std::string title = arg; // allow spaces
         TitleBSTNode *found = this->tb.search(title);
         if (!found)
         {
-            cout << "========ERROR========" << endl;
-            cout << "400" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "400" << endl;
-            flog << "=====================" << endl;
+            std::cout << "========ERROR========\n400\n====================\n";
+            this->flog << "========ERROR========\n400\n====================\n";
             return;
         }
 
-        cout << "========SEARCH========" << endl;
-        flog << "========SEARCH========" << endl;
+        std::cout << "========SEARCH========\n";
+        this->flog << "========SEARCH========\n";
 
-        const vector<string> &artists = found->getArtistList();
-        const vector<int> &rt = found->getRtList();
-
-        for (size_t i = 0; i < artists.size(); i++)
+        const std::vector<std::string> &artists = found->getArtistList();
+        const std::vector<int> &rt = found->getRtList();
+        for (size_t i = 0; i < artists.size(); ++i)
         {
-            int min = rt[i] / 60;
-            int sec = rt[i] % 60;
-
-            cout << artists[i] << "/" << title << "/";
-            flog << artists[i] << "/" << title << "/";
-
-            if (sec < 10)
-            {
-                cout << min << ":0" << sec << endl;
-                flog << min << ":0" << sec << endl;
-            }
-            else
-            {
-                cout << min << ":" << sec << endl;
-                flog << min << ":" << sec << endl;
-            }
+            int m = rt[i] / 60, s = rt[i] % 60;
+            std::cout << artists[i] << "/" << title << "/" << m << ":" << (s < 10 ? "0" : "") << s << "\n";
+            this->flog << artists[i] << "/" << title << "/" << m << ":" << (s < 10 ? "0" : "") << s << "\n";
         }
 
-        cout << "=====================" << endl;
-        flog << "=====================" << endl;
+        std::cout << "====================\n";
+        this->flog << "====================\n";
         return;
     }
 
-    // case 3: SONG
-    else if (option == "SONG")
+    // 4) SONG
+    if (option == "SONG")
     {
-        string songData;
-        ss >> ws;
-        getline(ss, songData);
-        if (songData.empty())
+        std::string song = arg; // format: artist|title
+        size_t bar = song.find('|');
+        if (bar == std::string::npos)
         {
-            cout << "========ERROR========" << endl;
-            cout << "400" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "400" << endl;
-            flog << "=====================" << endl;
+            std::cout << "========ERROR========\n400\n====================\n";
+            this->flog << "========ERROR========\n400\n====================\n";
             return;
         }
+        std::string artist = song.substr(0, bar);
+        std::string title = song.substr(bar + 1);
 
-        // split artist|title
-        size_t idx = songData.find('|');
-        if (idx == string::npos)
-        {
-            cout << "========ERROR========" << endl;
-            cout << "400" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "400" << endl;
-            flog << "=====================" << endl;
-            return;
-        }
-
-        string artist = songData.substr(0, idx);
-        string title = songData.substr(idx + 1);
-
-        // find artist first
         ArtistBSTNode *aNode = this->ab.search(artist);
-        bool found = false;
-
-        if (aNode)
+        if (!aNode)
         {
-            vector<string> titles = aNode->getTitleList();
-            vector<int> rt = aNode->getRtList();
-            for (size_t i = 0; i < titles.size(); i++)
+            std::cout << "========ERROR========\n400\n====================\n";
+            this->flog << "========ERROR========\n400\n====================\n";
+            return;
+        }
+
+        const std::vector<std::string> titles = aNode->getTitleList();
+        const std::vector<int> rt = aNode->getRtList();
+
+        for (size_t i = 0; i < titles.size(); ++i)
+        {
+            if (titles[i] == title)
             {
-                if (titles[i] == title)
-                {
-                    int min = rt[i] / 60;
-                    int sec = rt[i] % 60;
-
-                    cout << "========SEARCH========" << endl;
-                    flog << "========SEARCH========" << endl;
-
-                    cout << artist << "/" << title << "/";
-                    flog << artist << "/" << title << "/";
-
-                    if (sec < 10)
-                    {
-                        cout << min << ":0" << sec << endl;
-                        flog << min << ":0" << sec << endl;
-                    }
-                    else
-                    {
-                        cout << min << ":" << sec << endl;
-                        flog << min << ":" << sec << endl;
-                    }
-
-                    cout << "=====================" << endl;
-                    flog << "=====================" << endl;
-                    found = true;
-                    break;
-                }
+                int m = rt[i] / 60, s = rt[i] % 60;
+                std::cout << "========SEARCH========\n";
+                this->flog << "========SEARCH========\n";
+                std::cout << artist << "/" << title << "/" << m << ":" << (s < 10 ? "0" : "") << s << "\n";
+                this->flog << artist << "/" << title << "/" << m << ":" << (s < 10 ? "0" : "") << s << "\n";
+                std::cout << "====================\n";
+                this->flog << "====================\n";
+                return;
             }
         }
 
-        if (!found)
-        {
-            cout << "========ERROR========" << endl;
-            cout << "400" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "400" << endl;
-            flog << "=====================" << endl;
-        }
+        // not found in this artist
+        std::cout << "========ERROR========\n400\n====================\n";
+        this->flog << "========ERROR========\n400\n====================\n";
         return;
     }
 
-    // wrong option
-    else
-    {
-        cout << "========ERROR========" << endl;
-        cout << "400" << endl;
-        cout << "=====================" << endl;
-        flog << "========ERROR========" << endl;
-        flog << "400" << endl;
-        flog << "=====================" << endl;
-        return;
-    }
+    // 5) wrong option
+    std::cout << "========ERROR========\n400\n====================\n";
+    this->flog << "========ERROR========\n400\n====================\n";
 }
 
-void Manager::MAKEPL()
+void Manager::MAKEPL(const std::string &rest)
 {
-    // read command line
-    string line;
-    getline(fcmd, line);
-
-    // remove spaces
-    if (line.size() <= 7)
+    // 0) basic validation
+    if (rest.empty())
     {
-        cout << "========ERROR========" << endl;
-        cout << "500" << endl;
-        cout << "=====================" << endl;
-        flog << "========ERROR========" << endl;
-        flog << "500" << endl;
-        flog << "=====================" << endl;
+        std::cout << "========ERROR========\n500\n====================\n";
+        this->flog << "========ERROR========\n500\n====================\n";
         return;
     }
 
-    string data = line.substr(7);
-    if (!data.empty() && data[0] == ' ')
-        data = data.substr(1);
-
-    // split first word (option)
-    stringstream ss(data);
-    string option;
-    ss >> option;
-
-    // no option
-    if (option.empty())
+    // 1) split option and arg
+    std::string option, arg;
+    size_t sp = rest.find(' ');
+    option = (sp == std::string::npos) ? rest : rest.substr(0, sp);
+    arg = (sp == std::string::npos) ? "" : rest.substr(sp + 1);
+    if (!arg.empty() && arg[0] == ' ')
+        arg.erase(0, 1);
+    if (option.empty() || arg.empty())
     {
-        cout << "========ERROR========" << endl;
-        cout << "500" << endl;
-        cout << "=====================" << endl;
-        flog << "========ERROR========" << endl;
-        flog << "500" << endl;
-        flog << "=====================" << endl;
+        std::cout << "========ERROR========\n500\n====================\n";
+        this->flog << "========ERROR========\n500\n====================\n";
         return;
     }
 
-    cout << "========MAKEPL========" << endl;
-    flog << "========MAKEPL========" << endl;
+    // 2) helper: seconds -> "m:ss"
+    auto mmss = [](int sec) -> std::string
+    {
+        int m = sec / 60, s = sec % 60;
+        std::ostringstream os;
+        os << m << ":" << (s < 10 ? "0" : "") << s;
+        return os.str();
+    };
 
-    // case 1: ARTIST
+    // 3) gather candidates from BSTs
+    struct Song
+    {
+        std::string artist;
+        std::string title;
+        std::string rtStr;
+    };
+    std::vector<Song> toAdd;
+
     if (option == "ARTIST")
     {
-        string artist;
-        ss >> artist;
-        if (artist.empty())
+        std::string artist = arg;
+        ArtistBSTNode *node = this->ab.search(artist);
+        if (!node)
         {
-            cout << "========ERROR========" << endl;
-            cout << "500" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "500" << endl;
-            flog << "=====================" << endl;
+            std::cout << "========ERROR========\n500\n====================\n";
+            this->flog << "========ERROR========\n500\n====================\n";
             return;
         }
+        std::vector<std::string> titles = node->getTitleList();
+        std::vector<int> rts = node->getRtList();
+        for (size_t i = 0; i < titles.size(); ++i)
+        {
+            toAdd.push_back({artist, titles[i], mmss(rts[i])});
+        }
+    }
+    else if (option == "TITLE")
+    {
+        std::string title = arg;
+        TitleBSTNode *node = this->tb.search(title);
+        if (!node)
+        {
+            std::cout << "========ERROR========\n500\n====================\n";
+            this->flog << "========ERROR========\n500\n====================\n";
+            return;
+        }
+        const std::vector<std::string> &artists = node->getArtistList();
+        const std::vector<int> &rts = node->getRtList();
+        for (size_t i = 0; i < artists.size(); ++i)
+        {
+            toAdd.push_back({artists[i], title, mmss(rts[i])});
+        }
+    }
+    else if (option == "SONG")
+    {
+        size_t bar = arg.find('|');
+        if (bar == std::string::npos)
+        {
+            std::cout << "========ERROR========\n500\n====================\n";
+            this->flog << "========ERROR========\n500\n====================\n";
+            return;
+        }
+        std::string artist = arg.substr(0, bar);
+        std::string title = arg.substr(bar + 1);
 
-        ArtistBSTNode *found = this->ab.search(artist);
+        ArtistBSTNode *node = this->ab.search(artist);
+        if (!node)
+        {
+            std::cout << "========ERROR========\n500\n====================\n";
+            this->flog << "========ERROR========\n500\n====================\n";
+            return;
+        }
+        std::vector<std::string> titles = node->getTitleList();
+        std::vector<int> rts = node->getRtList();
+
+        bool found = false;
+        for (size_t i = 0; i < titles.size(); ++i)
+        {
+            if (titles[i] == title)
+            {
+                toAdd.push_back({artist, title, mmss(rts[i])});
+                found = true;
+                break;
+            }
+        }
         if (!found)
         {
-            cout << "========ERROR========" << endl;
-            cout << "500" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "500" << endl;
-            flog << "=====================" << endl;
+            std::cout << "========ERROR========\n500\n====================\n";
+            this->flog << "========ERROR========\n500\n====================\n";
             return;
         }
+    }
+    else
+    {
+        std::cout << "========ERROR========\n500\n====================\n";
+        this->flog << "========ERROR========\n500\n====================\n";
+        return;
+    }
 
-        vector<string> titles = found->getTitleList();
-        vector<int> rt = found->getRtList();
+    if (toAdd.empty())
+    {
+        std::cout << "========ERROR========\n500\n====================\n";
+        this->flog << "========ERROR========\n500\n====================\n";
+        return;
+    }
 
-        // space check
+    // 4) strict duplicate policy (if any exists -> fail all)
+    for (const auto &s : toAdd)
+    {
+        // must pass "artist|title|something"
+        std::ostringstream key;
+        key << s.artist << "|" << s.title << "|" << s.rtStr; // same as insert format
+        if (this->pl.exist(key.str()))
+        {
+            std::cout << "========ERROR========\n500\n====================\n";
+            this->flog << "========ERROR========\n500\n====================\n";
+            return;
+        }
+    }
+
+    // 5) header
+    std::cout << "========MAKEPL========\n";
+    this->flog << "========MAKEPL========\n";
+
+    // 6) insert each, echo only the added lines (NO playlist reprint)
+    for (const auto &s : toAdd)
+    {
         if (this->pl.full())
         {
-            cout << "========ERROR========" << endl;
-            cout << "500" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "500" << endl;
-            flog << "=====================" << endl;
+            // if full in the middle, still show only Count/Time (no list duplication)
+            std::string all = this->pl.print(); // contains whole list + summary
+            std::istringstream iss(all);
+            std::string line, last1, last2;
+            while (std::getline(iss, line))
+            { // keep last two lines
+                last2 = last1;
+                last1 = line;
+            }
+            std::cout << last2 << "\n"
+                      << last1 << "\n";
+            this->flog << last2 << "\n"
+                       << last1 << "\n";
+            std::cout << "====================\n";
+            this->flog << "====================\n";
             return;
         }
 
-        // add songs to playlist
-        for (size_t i = 0; i < titles.size(); i++)
-        {
-            stringstream s;
-            int min = rt[i] / 60;
-            int sec = rt[i] % 60;
-            s << artist << "|" << titles[i] << "|";
-            if (sec < 10)
-                s << min << ":0" << sec;
-            else
-                s << min << ":" << sec;
-            this->pl.insert_node(s.str());
+        std::ostringstream rec; // "artist|title|m:ss"
+        rec << s.artist << "|" << s.title << "|" << s.rtStr;
+        this->pl.insert_node(rec.str());
 
-            cout << artist << "/" << titles[i] << "/";
-            flog << artist << "/" << titles[i] << "/";
-            if (sec < 10)
-            {
-                cout << min << ":0" << sec << endl;
-                flog << min << ":0" << sec << endl;
-            }
-            else
-            {
-                cout << min << ":" << sec << endl;
-                flog << min << ":" << sec << endl;
-            }
-        }
-
-        // print count and time
-        string result = this->pl.print();
-        cout << result;
-        flog << result;
-        cout << "=====================" << endl;
-        flog << "=====================" << endl;
-        return;
+        // echo just-added song
+        std::cout << s.artist << "/" << s.title << "/" << s.rtStr << "\n";
+        this->flog << s.artist << "/" << s.title << "/" << s.rtStr << "\n";
     }
 
-    // case 2: TITLE
-    else if (option == "TITLE")
+    // 7) print ONLY Count/Time from pl.print()
+    std::string all = this->pl.print(); // full text (list + summary)
+    std::istringstream iss(all);
+    std::string line, last1, last2;
+    while (std::getline(iss, line))
     {
-        string title;
-        ss >> ws;
-        getline(ss, title);
-        if (title.empty())
-        {
-            cout << "========ERROR========" << endl;
-            cout << "500" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "500" << endl;
-            flog << "=====================" << endl;
-            return;
-        }
-
-        TitleBSTNode *found = this->tb.search(title);
-        if (!found)
-        {
-            cout << "========ERROR========" << endl;
-            cout << "500" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "500" << endl;
-            flog << "=====================" << endl;
-            return;
-        }
-
-        const vector<string> &artists = found->getArtistList();
-        const vector<int> &rt = found->getRtList();
-
-        if (this->pl.full() || (this->pl.run_time() + rt.size()) > 10)
-        {
-            cout << "========ERROR========" << endl;
-            cout << "500" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "500" << endl;
-            flog << "=====================" << endl;
-            return;
-        }
-
-        for (size_t i = 0; i < artists.size(); i++)
-        {
-            stringstream s;
-            int min = rt[i] / 60;
-            int sec = rt[i] % 60;
-            s << artists[i] << "|" << title << "|";
-            if (sec < 10)
-                s << min << ":0" << sec;
-            else
-                s << min << ":" << sec;
-            this->pl.insert_node(s.str());
-
-            cout << artists[i] << "/" << title << "/";
-            flog << artists[i] << "/" << title << "/";
-            if (sec < 10)
-            {
-                cout << min << ":0" << sec << endl;
-                flog << min << ":0" << sec << endl;
-            }
-            else
-            {
-                cout << min << ":" << sec << endl;
-                flog << min << ":" << sec << endl;
-            }
-        }
-
-        string result = this->pl.print();
-        cout << result;
-        flog << result;
-        cout << "=====================" << endl;
-        flog << "=====================" << endl;
-        return;
-
-        
+        last2 = last1;
+        last1 = line;
     }
-
-    // case 3: SONG
-    else if (option == "SONG")
-    {
-        string song;
-        ss >> ws;
-        getline(ss, song);
-        if (song.empty())
-        {
-            cout << "========ERROR========" << endl;
-            cout << "500" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "500" << endl;
-            flog << "=====================" << endl;
-            return;
-        }
-
-        size_t pos = song.find('|');
-        if (pos == string::npos)
-        {
-            cout << "========ERROR========" << endl;
-            cout << "500" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "500" << endl;
-            flog << "=====================" << endl;
-            return;
-        }
-
-        string artist = song.substr(0, pos);
-        string title = song.substr(pos + 1);
-
-        ArtistBSTNode *foundA = this->ab.search(artist);
-        bool ok = false;
-
-        if (foundA)
-        {
-            vector<string> titles = foundA->getTitleList();
-            vector<int> rt = foundA->getRtList();
-            for (size_t i = 0; i < titles.size(); i++)
-            {
-                if (titles[i] == title)
-                {
-                    int min = rt[i] / 60;
-                    int sec = rt[i] % 60;
-                    stringstream s;
-                    s << artist << "|" << title << "|";
-                    if (sec < 10)
-                        s << min << ":0" << sec;
-                    else
-                        s << min << ":" << sec;
-                    this->pl.insert_node(s.str());
-
-                    cout << artist << "/" << title << "/";
-                    flog << artist << "/" << title << "/";
-                    if (sec < 10)
-                    {
-                        cout << min << ":0" << sec << endl;
-                        flog << min << ":0" << sec << endl;
-                    }
-                    else
-                    {
-                        cout << min << ":" << sec << endl;
-                        flog << min << ":" << sec << endl;
-                    }
-                    ok = true;
-                    break;
-                }
-            }
-        }
-
-        if (!ok)
-        {
-            cout << "========ERROR========" << endl;
-            cout << "500" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "500" << endl;
-            flog << "=====================" << endl;
-            return;
-        }
-
-        string res = this->pl.print();
-        cout << res;
-        flog << res;
-        cout << "=====================" << endl;
-        flog << "=====================" << endl;
-        return;
-    }
-
-    // wrong option
-    else
-    {
-        cout << "========ERROR========" << endl;
-        cout << "500" << endl;
-        cout << "=====================" << endl;
-        flog << "========ERROR========" << endl;
-        flog << "500" << endl;
-        flog << "=====================" << endl;
-    }
+    std::cout << last2 << "\n"
+              << last1 << "\n";
+    this->flog << last2 << "\n"
+               << last1 << "\n";
+    std::cout << "====================\n";
+    this->flog << "====================\n";
 }
 
-void Manager::PRINT()
+void Manager::PRINT(const std::string &rest)
 {
-    // read one line from command file
-    string line;
-    getline(fcmd, line);
-
-    // remove spaces
-    if (line.size() <= 5)
-    {
-        cout << "========ERROR========" << endl;
-        cout << "600" << endl;
-        cout << "=====================" << endl;
-        flog << "========ERROR========" << endl;
-        flog << "600" << endl;
-        flog << "=====================" << endl;
-        return;
-    }
-
-    string data = line.substr(5);
+    std::string data = rest;
     if (!data.empty() && data[0] == ' ')
         data = data.substr(1);
 
-    // split option
-    stringstream ss(data);
-    string option;
+    if (data.empty())
+    {
+        std::cout << "========ERROR========\n600\n====================\n";
+        this->flog << "========ERROR========\n600\n====================\n";
+        return;
+    }
+
+    std::stringstream ss(data);
+    std::string option;
     ss >> option;
 
-    // no option
-    if (option.empty())
+    // helper: capture cout during a function call, then write to cout + flog
+    auto capture_and_dual_write = [&](const std::function<void()> &fn_call)
     {
-        cout << "========ERROR========" << endl;
-        cout << "600" << endl;
-        cout << "=====================" << endl;
-        flog << "========ERROR========" << endl;
-        flog << "600" << endl;
-        flog << "=====================" << endl;
-        return;
-    }
+        std::ostringstream cap;
+        std::streambuf *old = std::cout.rdbuf(cap.rdbuf()); // redirect cout to cap
+        fn_call();                                          // call function that prints to cout
+        std::cout.rdbuf(old);                               // restore cout
 
-    // case 1: ARTIST
+        const std::string out = cap.str(); // same text captured
+        std::cout << out;
+        this->flog << out;
+        this->flog.flush();
+    };
+
     if (option == "ARTIST")
     {
-        // check if empty
-        // ArtistBST::print() already handles empty (prints error 600)
-        this->ab.print();
+        // ArtistBST::print() prints to cout; we mirror it to flog as well
+        capture_and_dual_write([&]
+                               { this->ab.print(); });
         return;
     }
-
-    // case 2: TITLE
     else if (option == "TITLE")
     {
-        this->tb.print();
+        capture_and_dual_write([&]
+                               { this->tb.print(); });
         return;
     }
-
-    // case 3: LIST
     else if (option == "LIST")
     {
         if (this->pl.empty())
         {
-            cout << "========ERROR========" << endl;
-            cout << "600" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "600" << endl;
-            flog << "=====================" << endl;
+            std::cout << "========ERROR========\n600\n====================\n";
+            this->flog << "========ERROR========\n600\n====================\n";
             return;
         }
 
-        cout << "========PRINT========" << endl;
-        cout << this->pl.print();
-        cout << "=====================" << endl;
+        std::cout << "========PRINT========\n";
+        std::cout << this->pl.print();
+        std::cout << "====================\n";
 
-        flog << "========PRINT========" << endl;
-        flog << this->pl.print();
-        flog << "=====================" << endl;
+        this->flog << "========PRINT========\n";
+        this->flog << this->pl.print();
+        this->flog << "====================\n";
+        this->flog.flush();
         return;
     }
 
     // wrong option
-    else
-    {
-        cout << "========ERROR========" << endl;
-        cout << "600" << endl;
-        cout << "=====================" << endl;
-        flog << "========ERROR========" << endl;
-        flog << "600" << endl;
-        flog << "=====================" << endl;
-    }
+    std::cout << "========ERROR========\n600\n====================\n";
+    this->flog << "========ERROR========\n600\n====================\n";
 }
 
-void Manager::DELETE()
+void Manager::DELETE(const std::string &rest)
 {
-    // read command line
-    string line;
-    getline(fcmd, line);
-
-    // cut spaces
-    if (line.size() <= 6)
+    // 0) validate rest
+    if (rest.empty())
     {
-        cout << "========ERROR========" << endl;
-        cout << "700" << endl;
-        cout << "=====================" << endl;
-        flog << "========ERROR========" << endl;
-        flog << "700" << endl;
-        flog << "=====================" << endl;
+        std::cout << "========ERROR========\n700\n====================\n";
+        this->flog << "========ERROR========\n700\n====================\n";
         return;
     }
 
-    string data = line.substr(6);
-    if (!data.empty() && data[0] == ' ')
-        data = data.substr(1);
-
-    // split option
-    stringstream ss(data);
-    string option;
-    ss >> option;
-
-    // no option
-    if (option.empty())
+    // 1) split option and arg
+    std::string option, arg;
+    size_t sp = rest.find(' ');
+    option = (sp == std::string::npos) ? rest : rest.substr(0, sp);
+    arg = (sp == std::string::npos) ? "" : rest.substr(sp + 1);
+    if (!arg.empty() && arg[0] == ' ')
+        arg.erase(0, 1);
+    if (option.empty() || arg.empty())
     {
-        cout << "========ERROR========" << endl;
-        cout << "700" << endl;
-        cout << "=====================" << endl;
-        flog << "========ERROR========" << endl;
-        flog << "700" << endl;
-        flog << "=====================" << endl;
+        std::cout << "========ERROR========\n700\n====================\n";
+        this->flog << "========ERROR========\n700\n====================\n";
         return;
     }
 
-    // case 1: ARTIST
+    auto print_ok = [&]()
+    {
+        std::cout << "========DELETE========\nSuccess\n====================\n";
+        this->flog << "========DELETE========\nSuccess\n====================\n";
+    };
+
+    // helper: remove (artist,title) from ArtistBST node
+    auto remove_from_artist_node = [&](ArtistBSTNode *anode, const std::string &title) -> bool
+    {
+        // return true if node becomes empty
+        std::vector<std::string> titles = anode->getTitleList();
+        std::vector<int> rts = anode->getRtList();
+        for (size_t i = 0; i < titles.size(); ++i)
+        {
+            if (titles[i] == title)
+            {
+                titles.erase(titles.begin() + i);
+                rts.erase(rts.begin() + i);
+                anode->setTitleList(titles);
+                anode->setRtList(rts);
+                break;
+            }
+        }
+        return titles.empty();
+    };
+
+    // helper: remove (artist,title) from TitleBST node
+    auto remove_from_title_node = [&](TitleBSTNode *tnode, const std::string &artist) -> bool
+    {
+        // return true if node becomes empty
+        std::vector<std::string> artists = tnode->getArtistList();
+        std::vector<int> rts = tnode->getRtList();
+        for (size_t i = 0; i < artists.size(); ++i)
+        {
+            if (artists[i] == artist)
+            {
+                artists.erase(artists.begin() + i);
+                rts.erase(rts.begin() + i);
+                tnode->setArtistList(artists);
+                tnode->setRtList(rts);
+                break;
+            }
+        }
+        return artists.empty();
+    };
+
+    // 2) cases
     if (option == "ARTIST")
     {
-        string artist;
-        ss >> artist;
-        if (artist.empty())
+        std::string artist = arg; // allow spaces
+        ArtistBSTNode *anode = this->ab.search(artist);
+        if (!anode)
         {
-            cout << "========ERROR========" << endl;
-            cout << "700" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "700" << endl;
-            flog << "=====================" << endl;
+            std::cout << "========ERROR========\n700\n====================\n";
+            this->flog << "========ERROR========\n700\n====================\n";
             return;
         }
 
-        ArtistBSTNode *found = this->ab.search(artist);
-        if (!found)
+        // copy titles first
+        std::vector<std::string> titles = anode->getTitleList();
+
+        // update TitleBST and PlayList
+        for (const auto &t : titles)
         {
-            cout << "========ERROR========" << endl;
-            cout << "700" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "700" << endl;
-            flog << "=====================" << endl;
-            return;
+            TitleBSTNode *tnode = this->tb.search(t);
+            if (tnode)
+            {
+                bool empty = remove_from_title_node(tnode, artist);
+                if (empty)
+                    this->tb.deleteNode(t);
+            }
+            // delete only this song in playlist
+            this->pl.delete_node(artist + "|" + t);
         }
 
-        // copy current data
-        vector<string> titles = found->getTitleList();
-
-        // delete from ArtistBST
+        // remove artist node from ArtistBST
         this->ab.delete_node(artist);
 
-        // delete from PlayList and TitleBST
-        for (auto &t : titles)
-        {
-            this->tb.deleteNode(t);
-            string songLine = artist + "|" + t;
-            this->pl.delete_node(songLine);
-        }
-
-        cout << "========DELETE========" << endl;
-        cout << "Success" << endl;
-        cout << "=====================" << endl;
-
-        flog << "========DELETE========" << endl;
-        flog << "Success" << endl;
-        flog << "=====================" << endl;
+        print_ok();
         return;
     }
-
-    // case 2: TITLE
     else if (option == "TITLE")
     {
-        string title;
-        ss >> ws;
-        getline(ss, title);
-        if (title.empty())
+        std::string title = arg; // allow spaces
+        TitleBSTNode *tnode = this->tb.search(title);
+        if (!tnode)
         {
-            cout << "========ERROR========" << endl;
-            cout << "700" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "700" << endl;
-            flog << "=====================" << endl;
+            std::cout << "========ERROR========\n700\n====================\n";
+            this->flog << "========ERROR========\n700\n====================\n";
             return;
         }
 
-        TitleBSTNode *found = this->tb.search(title);
-        if (!found)
+        // copy artists first
+        std::vector<std::string> artists = tnode->getArtistList();
+
+        // update ArtistBST and PlayList
+        for (const auto &a : artists)
         {
-            cout << "========ERROR========" << endl;
-            cout << "700" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "700" << endl;
-            flog << "=====================" << endl;
-            return;
+            ArtistBSTNode *anode = this->ab.search(a);
+            if (anode)
+            {
+                bool empty = remove_from_artist_node(anode, title);
+                if (empty)
+                    this->ab.delete_node(a);
+            }
+            // delete only this song in playlist
+            this->pl.delete_node(a + "|" + title);
         }
 
-        const vector<string> &artists = found->getArtistList();
-
-        // delete from TitleBST
+        // remove title node from TitleBST
         this->tb.deleteNode(title);
 
-        // delete from ArtistBST and PlayList
-        for (auto &a : artists)
-        {
-            this->ab.delete_node(a);
-            string songLine = a + "|" + title;
-            this->pl.delete_node(songLine);
-        }
-
-        cout << "========DELETE========" << endl;
-        cout << "Success" << endl;
-        cout << "=====================" << endl;
-
-        flog << "========DELETE========" << endl;
-        flog << "Success" << endl;
-        flog << "=====================" << endl;
+        print_ok();
         return;
     }
-
-    // case 3: LIST
     else if (option == "LIST")
     {
-        string song;
-        ss >> ws;
-        getline(ss, song);
-        if (song.empty())
+        // arg: "artist|title" only playlist touched
+        if (!this->pl.exist(arg))
         {
-            cout << "========ERROR========" << endl;
-            cout << "700" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "700" << endl;
-            flog << "=====================" << endl;
+            std::cout << "========ERROR========\n700\n====================\n";
+            this->flog << "========ERROR========\n700\n====================\n";
             return;
         }
-
-        // only delete from PlayList
-        this->pl.delete_node(song);
-
-        cout << "========DELETE========" << endl;
-        cout << "Success" << endl;
-        cout << "=====================" << endl;
-
-        flog << "========DELETE========" << endl;
-        flog << "Success" << endl;
-        flog << "=====================" << endl;
+        this->pl.delete_node(arg);
+        print_ok();
         return;
     }
-
-    // case 4: SONG
     else if (option == "SONG")
     {
-        string song;
-        ss >> ws;
-        getline(ss, song);
-        if (song.empty())
+        // arg: "artist|title" remove across structures
+        size_t bar = arg.find('|');
+        if (bar == std::string::npos)
         {
-            cout << "========ERROR========" << endl;
-            cout << "700" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "700" << endl;
-            flog << "=====================" << endl;
+            std::cout << "========ERROR========\n700\n====================\n";
+            this->flog << "========ERROR========\n700\n====================\n";
+            return;
+        }
+        std::string artist = arg.substr(0, bar);
+        std::string title = arg.substr(bar + 1);
+
+        bool touched = false;
+
+        // ArtistBST
+        if (ArtistBSTNode *anode = this->ab.search(artist))
+        {
+            bool empty = remove_from_artist_node(anode, title);
+            if (empty)
+                this->ab.delete_node(artist);
+            touched = true;
+        }
+
+        // TitleBST
+        if (TitleBSTNode *tnode = this->tb.search(title))
+        {
+            bool empty = remove_from_title_node(tnode, artist);
+            if (empty)
+                this->tb.deleteNode(title);
+            touched = true;
+        }
+
+        // PlayList
+        if (this->pl.exist(artist + "|" + title))
+        {
+            this->pl.delete_node(artist + "|" + title);
+            touched = true;
+        }
+
+        if (!touched)
+        {
+            std::cout << "========ERROR========\n700\n====================\n";
+            this->flog << "========ERROR========\n700\n====================\n";
             return;
         }
 
-        size_t pos = song.find('|');
-        if (pos == string::npos)
-        {
-            cout << "========ERROR========" << endl;
-            cout << "700" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "700" << endl;
-            flog << "=====================" << endl;
-            return;
-        }
-
-        string artist = song.substr(0, pos);
-        string title = song.substr(pos + 1);
-
-        ArtistBSTNode *foundA = this->ab.search(artist);
-        TitleBSTNode *foundT = this->tb.search(title);
-
-        if (!foundA && !foundT)
-        {
-            cout << "========ERROR========" << endl;
-            cout << "700" << endl;
-            cout << "=====================" << endl;
-            flog << "========ERROR========" << endl;
-            flog << "700" << endl;
-            flog << "=====================" << endl;
-            return;
-        }
-
-        // remove song title from that artist node
-        if (foundA)
-        {
-            // simple remove from artist node
-            vector<string> tlist = foundA->getTitleList();
-            vector<int> rlist = foundA->getRtList();
-            for (size_t i = 0; i < tlist.size(); i++)
-            {
-                if (tlist[i] == title)
-                {
-                    tlist.erase(tlist.begin() + i);
-                    rlist.erase(rlist.begin() + i);
-                    break;
-                }
-            }
-            foundA->setTitleList(tlist);
-            foundA->setRtList(rlist);
-        }
-
-        if (foundT)
-        {
-            // simple remove from title node
-            vector<string> alist = foundT->getArtistList();
-            vector<int> rlist = foundT->getRtList();
-            for (size_t i = 0; i < alist.size(); i++)
-            {
-                if (alist[i] == artist)
-                {
-                    alist.erase(alist.begin() + i);
-                    rlist.erase(rlist.begin() + i);
-                    break;
-                }
-            }
-            foundT->setArtistList(alist);
-            foundT->setRtList(rlist);
-        }
-
-        this->pl.delete_node(song);
-
-        cout << "========DELETE========" << endl;
-        cout << "Success" << endl;
-        cout << "=====================" << endl;
-
-        flog << "========DELETE========" << endl;
-        flog << "Success" << endl;
-        flog << "=====================" << endl;
+        print_ok();
         return;
     }
 
     // wrong option
-    else
-    {
-        cout << "========ERROR========" << endl;
-        cout << "700" << endl;
-        cout << "=====================" << endl;
-        flog << "========ERROR========" << endl;
-        flog << "700" << endl;
-        flog << "=====================" << endl;
-    }
+    std::cout << "========ERROR========\n700\n====================\n";
+    this->flog << "========ERROR========\n700\n====================\n";
 }
 
 void Manager::EXIT()
@@ -1243,9 +880,9 @@ void Manager::EXIT()
     // print success
     cout << "========EXIT========" << endl;
     cout << "Success" << endl;
-    cout << "=====================" << endl;
+    cout << "====================" << endl;
 
     flog << "========EXIT========" << endl;
     flog << "Success" << endl;
-    flog << "=====================" << endl;
+    flog << "====================" << endl;
 }

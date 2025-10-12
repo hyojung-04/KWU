@@ -22,12 +22,12 @@ public:
 	void run(const char* command);
 
 	void LOAD();
-	void ADD();
+	void ADD(const std::string& data_in);
 	void QPOP();
-	void SEARCH();
-	void MAKEPL();
-	void PRINT();
-	void DELETE();
+	void SEARCH(const std::string& rest);
+	void MAKEPL(const std::string& rest);
+	void PRINT(const std::string& rest);
+	void DELETE(const std::string& rest);
 	void EXIT();
 
 };
