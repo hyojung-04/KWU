@@ -20,4 +20,5 @@ public:
 	bool full();
 	std::string print();
 	int run_time();
+	 int size() const { return this->count; }
 };

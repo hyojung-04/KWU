@@ -178,9 +178,7 @@ string PlayList::print() {
         cur = cur->getNext();
     }
     ss << "Count : " << this->count << " / 10\n";
-    ss << "Time : " << (this->time / 60) << "min ";
-    if (this->time % 60 < 10) ss << "0";
-    ss << (this->time % 60) << "sec\n";
+    ss << "Time : " << (this->time / 60) << "min " << (this->time % 60) << "sec\n";
     return ss.str();
 }
 
