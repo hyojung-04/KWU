@@ -15,6 +15,7 @@ private:
 	PlayList pl;
 	ifstream fcmd;
 	ofstream flog;
+	bool loaded_once = false;
 public:
 	Manager();
 	~Manager();

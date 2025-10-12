@@ -1,0 +1,256 @@
+========LOAD========
+N.Flying/blue moon/3:36
+N.Flying/moonshot/3:26
+N.Flying/songbird/3:46
+N.Flying/rooftop/3:19
+N.Flying/oh really./3:10
+PSY/gangnam style/3:25
+PSY/gentleman/3:14
+PSY/daddy/3:32
+PSY/new face/3:16
+PSY/that that/3:05
+BTS/dynamite/3:19  
+IU/blueming/3:37
+Michael Jackson/beat it/4:18
+Maroon 5/sugar/3:55
+Westlife/my love/3:51
+Buzz/my love/4:05
+Hyorin/blue moon/3:24
+====================
+========ERROR========
+100
+====================
+========ADD========
+Taylor Swift/Love Story/03:55
+====================
+========ADD========
+Coldplay/Yellow/04:29
+====================
+========ADD========
+Coldplay/Fix You/04:55
+====================
+========ADD========
+NewJeans/Ditto/03:06
+====================
+========ADD========
+BTS/Dynamite/03:20
+====================
+========ADD========
+IU/Palette/03:37
+====================
+========ERROR========
+200
+====================
+========QPOP========
+Success
+====================
+========SEARCH========
+Taylor Swift/Love Story/3:55
+====================
+========ERROR========
+400
+====================
+========ERROR========
+400
+====================
+========SEARCH========
+Coldplay/Yellow/4:29
+Coldplay/Fix You/4:55
+====================
+========SEARCH========
+IU/blueming/3:37
+IU/Palette/3:37
+====================
+========ERROR========
+400
+====================
+========ERROR========
+700
+====================
+========ERROR========
+700
+====================
+========DELETE========
+Success
+====================
+========ERROR========
+700
+====================
+========PRINT========
+TitleBST
+NewJeans/Ditto/3:06
+BTS/Dynamite/3:20
+Coldplay/Fix You/4:55
+Taylor Swift/Love Story/3:55
+IU/Palette/3:37
+Michael Jackson/beat it/4:18
+N.Flying/blue moon/3:36
+Hyorin/blue moon/3:24
+IU/blueming/3:37
+PSY/daddy/3:32
+BTS/dynamite/3:19
+PSY/gangnam style/3:25
+PSY/gentleman/3:14
+N.Flying/moonshot/3:26
+Westlife/my love/3:51
+Buzz/my love/4:05
+PSY/new face/3:16
+N.Flying/oh really./3:10
+N.Flying/rooftop/3:19
+N.Flying/songbird/3:46
+Maroon 5/sugar/3:55
+PSY/that that/3:05
+=====================
+========PRINT========
+ArtistBST
+BTS/dynamite/3:19
+BTS/Dynamite/3:20
+Buzz/my love/4:05
+Coldplay/Fix You/4:55
+Hyorin/blue moon/3:24
+IU/blueming/3:37
+IU/Palette/3:37
+Maroon 5/sugar/3:55
+Michael Jackson/beat it/4:18
+N.Flying/blue moon/3:36
+N.Flying/moonshot/3:26
+N.Flying/songbird/3:46
+N.Flying/rooftop/3:19
+N.Flying/oh really./3:10
+NewJeans/Ditto/3:06
+PSY/gangnam style/3:25
+PSY/gentleman/3:14
+PSY/daddy/3:32
+PSY/new face/3:16
+PSY/that that/3:05
+Taylor Swift/Love Story/3:55
+Westlife/my love/3:51
+=====================
+========ERROR========
+600
+====================
+========ERROR========
+600
+====================
+========ERROR========
+600
+====================
+========ERROR========
+300
+====================
+========ERROR========
+300
+====================
+========ERROR========
+300
+====================
+========ERROR========
+300
+====================
+========ERROR========
+300
+====================
+========ERROR========
+300
+====================
+========ERROR========
+300
+====================
+========ERROR========
+1000
+====================
+========ERROR========
+100
+====================
+========ADD========
+EXO/Love Shot/03:20
+====================
+========ADD========
+Red Velvet/Psycho/03:33
+====================
+========ADD========
+BigBang/Haru Haru/04:16
+====================
+========ADD========
+Coldplay/Viva La Vida/04:03
+====================
+========ERROR========
+600
+====================
+========PRINT========
+TitleBST
+NewJeans/Ditto/3:06
+BTS/Dynamite/3:20
+Coldplay/Fix You/4:55
+Taylor Swift/Love Story/3:55
+IU/Palette/3:37
+Michael Jackson/beat it/4:18
+N.Flying/blue moon/3:36
+Hyorin/blue moon/3:24
+IU/blueming/3:37
+PSY/daddy/3:32
+BTS/dynamite/3:19
+PSY/gangnam style/3:25
+PSY/gentleman/3:14
+N.Flying/moonshot/3:26
+Westlife/my love/3:51
+Buzz/my love/4:05
+PSY/new face/3:16
+N.Flying/oh really./3:10
+N.Flying/rooftop/3:19
+N.Flying/songbird/3:46
+Maroon 5/sugar/3:55
+PSY/that that/3:05
+=====================
+========PRINT========
+ArtistBST
+BTS/dynamite/3:19
+BTS/Dynamite/3:20
+Buzz/my love/4:05
+Coldplay/Fix You/4:55
+Hyorin/blue moon/3:24
+IU/blueming/3:37
+IU/Palette/3:37
+Maroon 5/sugar/3:55
+Michael Jackson/beat it/4:18
+N.Flying/blue moon/3:36
+N.Flying/moonshot/3:26
+N.Flying/songbird/3:46
+N.Flying/rooftop/3:19
+N.Flying/oh really./3:10
+NewJeans/Ditto/3:06
+PSY/gangnam style/3:25
+PSY/gentleman/3:14
+PSY/daddy/3:32
+PSY/new face/3:16
+PSY/that that/3:05
+Taylor Swift/Love Story/3:55
+Westlife/my love/3:51
+=====================
+========ERROR========
+400
+====================
+========SEARCH========
+Coldplay/Fix You/4:55
+====================
+========ERROR========
+200
+====================
+========ERROR========
+200
+====================
+========ERROR========
+200
+====================
+========ERROR========
+400
+====================
+========ERROR========
+700
+====================
+========ERROR========
+1000
+====================
+========EXIT========
+Success
+====================

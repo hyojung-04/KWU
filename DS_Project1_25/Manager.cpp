@@ -14,7 +14,7 @@ static const char *TAIL = "====================\n";
 Manager::Manager()
 {
     // open log in append mode
-    this->flog.open("log.txt", ios::app);
+    this->flog.open("log_test[debug].txt", ios::app);
 }
 
 Manager::~Manager()
@@ -105,6 +105,13 @@ void Manager::run(const char *command)
 
 void Manager::LOAD()
 {
+    if (this->loaded_once)
+    {
+        std::cout << "========ERROR========\n100\n====================\n";
+        this->flog << "========ERROR========\n100\n====================\n";
+        return;
+    }
+
     // case: already loaded (queue not empty)
     if (!this->q.empty())
     {
@@ -176,6 +183,8 @@ void Manager::LOAD()
 
     cout << "====================" << endl;
     this->flog << "====================" << endl;
+
+    this->loaded_once=true;
 }
 
 void Manager::ADD(const std::string &data_in)
@@ -745,6 +754,7 @@ void Manager::PRINT(const std::string &rest)
 
 void Manager::DELETE(const std::string &rest)
 {
+    // basic arg check
     if (rest.empty())
     {
         std::cout << "========ERROR========\n700\n"
@@ -754,13 +764,15 @@ void Manager::DELETE(const std::string &rest)
         return;
     }
 
-    // split option and arg
+    // split option + argument
     std::string option, arg;
     size_t sp = rest.find(' ');
     option = (sp == std::string::npos) ? rest : rest.substr(0, sp);
     arg = (sp == std::string::npos) ? "" : rest.substr(sp + 1);
     if (!arg.empty() && arg[0] == ' ')
         arg.erase(0, 1);
+
+    // validate tokens
     if (option.empty() || arg.empty())
     {
         std::cout << "========ERROR========\n700\n"
@@ -770,6 +782,7 @@ void Manager::DELETE(const std::string &rest)
         return;
     }
 
+    // success printer (only here, not inside BST/PL)
     auto print_ok = [&]()
     {
         std::cout << "========DELETE========\nSuccess\n"
@@ -778,47 +791,78 @@ void Manager::DELETE(const std::string &rest)
                    << TAIL;
     };
 
-    // remove (artist,title) from ArtistBST node (return true if empty)
-    auto remove_from_artist_node = [&](ArtistBSTNode *anode, const std::string &title) -> bool
+    // remove all matches of (title) inside an Artist node
+    // returns {removed_any, became_empty}
+    auto remove_from_artist_node =
+        [&](ArtistBSTNode *anode, const std::string &title) -> std::pair<bool, bool>
     {
         std::vector<std::string> titles = anode->getTitleList();
         std::vector<int> rts = anode->getRtList();
+
+        bool removed = false;
+        std::vector<std::string> newTitles;
+        std::vector<int> newRts;
+        newTitles.reserve(titles.size());
+        newRts.reserve(rts.size());
+
         for (size_t i = 0; i < titles.size(); ++i)
         {
             if (titles[i] == title)
             {
-                titles.erase(titles.begin() + i);
-                rts.erase(rts.begin() + i);
-                anode->setTitleList(titles);
-                anode->setRtList(rts);
-                break;
+                removed = true;
+                continue;
             }
+            newTitles.push_back(titles[i]);
+            newRts.push_back(rts[i]);
         }
-        return titles.empty();
+
+        if (!removed)
+            return {false, false};
+
+        anode->setTitleList(newTitles);
+        anode->setRtList(newRts);
+        anode->setCount(static_cast<int>(newTitles.size()));
+        return {true, newTitles.empty()};
     };
 
-    // remove (artist,title) from TitleBST node (return true if empty)
-    auto remove_from_title_node = [&](TitleBSTNode *tnode, const std::string &artist) -> bool
+    // remove all matches of (artist) inside a Title node
+    // returns {removed_any, became_empty}
+    auto remove_from_title_node =
+        [&](TitleBSTNode *tnode, const std::string &artist) -> std::pair<bool, bool>
     {
         std::vector<std::string> artists = tnode->getArtistList();
         std::vector<int> rts = tnode->getRtList();
+
+        bool removed = false;
+        std::vector<std::string> newArtists;
+        std::vector<int> newRts;
+        newArtists.reserve(artists.size());
+        newRts.reserve(rts.size());
+
         for (size_t i = 0; i < artists.size(); ++i)
         {
             if (artists[i] == artist)
             {
-                artists.erase(artists.begin() + i);
-                rts.erase(rts.begin() + i);
-                tnode->setArtistList(artists);
-                tnode->setRtList(rts);
-                break;
+                removed = true;
+                continue;
             }
+            newArtists.push_back(artists[i]);
+            newRts.push_back(rts[i]);
         }
-        return artists.empty();
+
+        if (!removed)
+            return {false, false};
+
+        tnode->setArtistList(newArtists);
+        tnode->setRtList(newRts);
+        tnode->setCount(static_cast<int>(newArtists.size()));
+        return {true, newArtists.empty()};
     };
 
+    // option: ARTIST <artist>
     if (option == "ARTIST")
     {
-        std::string artist = arg;
+        const std::string artist = arg;
         ArtistBSTNode *anode = this->ab.search(artist);
         if (!anode)
         {
@@ -829,31 +873,36 @@ void Manager::DELETE(const std::string &rest)
             return;
         }
 
-        // copy titles first
+        // snapshot titles
         std::vector<std::string> titles = anode->getTitleList();
 
-        // update TitleBST and PlayList
+        // clean TitleBST and PlayList for every title
         for (const auto &t : titles)
         {
-            TitleBSTNode *tnode = this->tb.search(t);
-            if (tnode)
+            if (TitleBSTNode *tnode = this->tb.search(t))
             {
-                bool empty = remove_from_title_node(tnode, artist);
+                auto [removed, empty] = remove_from_title_node(tnode, artist);
                 if (empty)
                     this->tb.deleteNode(t);
+                // removed flag not needed here because whole artist will be deleted anyway
             }
-            this->pl.delete_node(artist + "|" + t);
+            // remove all duplicates in playlist
+            const std::string key = artist + "|" + t;
+            while (this->pl.exist(key))
+                this->pl.delete_node(key);
         }
 
-        // remove artist node from ArtistBST
+        // finally remove artist node
         this->ab.delete_node(artist);
 
         print_ok();
         return;
     }
-    else if (option == "TITLE")
+
+    // option: TITLE <title>
+    if (option == "TITLE")
     {
-        std::string title = arg;
+        const std::string title = arg;
         TitleBSTNode *tnode = this->tb.search(title);
         if (!tnode)
         {
@@ -864,32 +913,36 @@ void Manager::DELETE(const std::string &rest)
             return;
         }
 
-        // copy artists first
+        // snapshot artists
         std::vector<std::string> artists = tnode->getArtistList();
 
-        // update ArtistBST and PlayList
+        // clean ArtistBST and PlayList for every artist
         for (const auto &a : artists)
         {
-            ArtistBSTNode *anode = this->ab.search(a);
-            if (anode)
+            if (ArtistBSTNode *anode = this->ab.search(a))
             {
-                bool empty = remove_from_artist_node(anode, title);
+                auto [removed, empty] = remove_from_artist_node(anode, title);
                 if (empty)
                     this->ab.delete_node(a);
             }
-            this->pl.delete_node(a + "|" + title);
+            // remove all duplicates in playlist
+            const std::string key = a + "|" + title;
+            while (this->pl.exist(key))
+                this->pl.delete_node(key);
         }
 
-        // remove title node from TitleBST
+        // finally remove title node
         this->tb.deleteNode(title);
 
         print_ok();
         return;
     }
-    else if (option == "LIST")
+
+    // option: LIST <artist|title> (playlist only)
+    if (option == "LIST")
     {
-        // arg: "artist|title" only playlist touched
-        if (!this->pl.exist(arg))
+        const std::string key = arg;
+        if (!this->pl.exist(key))
         {
             std::cout << "========ERROR========\n700\n"
                       << TAIL;
@@ -897,13 +950,16 @@ void Manager::DELETE(const std::string &rest)
                        << TAIL;
             return;
         }
-        this->pl.delete_node(arg);
+        // remove all duplicates in playlist
+        while (this->pl.exist(key))
+            this->pl.delete_node(key);
         print_ok();
         return;
     }
-    else if (option == "SONG")
+
+    // option: SONG <artist|title> (every structure)
+    if (option == "SONG")
     {
-        // arg: "artist|title" remove across structures
         size_t bar = arg.find('|');
         if (bar == std::string::npos)
         {
@@ -913,35 +969,41 @@ void Manager::DELETE(const std::string &rest)
                        << TAIL;
             return;
         }
-        std::string artist = arg.substr(0, bar);
-        std::string title = arg.substr(bar + 1);
+        const std::string artist = arg.substr(0, bar);
+        const std::string title = arg.substr(bar + 1);
 
         bool touched = false;
 
-        // ArtistBST
+        // ArtistBST side
         if (ArtistBSTNode *anode = this->ab.search(artist))
         {
-            bool empty = remove_from_artist_node(anode, title);
+            auto [removed, empty] = remove_from_artist_node(anode, title);
+            if (removed)
+                touched = true;
             if (empty)
                 this->ab.delete_node(artist);
-            touched = true;
         }
 
-        // TitleBST
+        // TitleBST side
         if (TitleBSTNode *tnode = this->tb.search(title))
         {
-            bool empty = remove_from_title_node(tnode, artist);
+            auto [removed, empty] = remove_from_title_node(tnode, artist);
+            if (removed)
+                touched = true;
             if (empty)
                 this->tb.deleteNode(title);
-            touched = true;
         }
 
-        // PlayList
-        if (this->pl.exist(artist + "|" + title))
+        // PlayList side
+        const std::string key = artist + "|" + title;
+        bool plRemoved = false;
+        while (this->pl.exist(key))
         {
-            this->pl.delete_node(artist + "|" + title);
-            touched = true;
+            this->pl.delete_node(key);
+            plRemoved = true;
         }
+        if (plRemoved)
+            touched = true;
 
         if (!touched)
         {

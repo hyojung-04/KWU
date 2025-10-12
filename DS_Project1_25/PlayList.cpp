@@ -93,11 +93,10 @@ void PlayList::delete_node(const string& line) {
 
     // Split line into artist and title
     size_t idx1 = line.find('|');
-    size_t idx2 = line.find('|', idx1 + 1);
-    if (idx1 == string::npos || idx2 == string::npos) return;
+    if (idx1 == string::npos) return;
 
     string artist = line.substr(0, idx1);
-    string title = line.substr(idx1 + 1, idx2 - idx1 - 1);
+    string title = line.substr(idx1 + 1);
 
     PlayListNode* cur = this->head;
     for (int i = 0; i < this->count; i++) {
@@ -142,11 +141,15 @@ bool PlayList::exist(const string& line) {
     if (this->empty() || line.empty()) return false;
 
     size_t idx1 = line.find('|');
-    size_t idx2 = line.find('|', idx1 + 1);
-    if (idx1 == string::npos || idx2 == string::npos) return false;
+    if (idx1 == string::npos) return false;
 
     string artist = line.substr(0, idx1);
-    string title = line.substr(idx1 + 1, idx2 - idx1 - 1);
+
+    size_t idx2 = line.find('|', idx1 + 1);
+
+    string title = (idx2 == string::npos) 
+                   ? line.substr(idx1 + 1)
+                   : line.substr(idx1 + 1, idx2 - idx1 - 1);
 
     PlayListNode* cur = this->head;
     for (int i = 0; i < this->count; i++) {
